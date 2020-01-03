@@ -110,7 +110,7 @@ public class mainFrame extends JFrame{
 	          }
 	     });
 		sf = new SerialFast();
-		//sf.startPort("COM3");
+		sf.startPort("COM3");
 		times = new double[2];
 		times[1] = System.currentTimeMillis()/1000;
 		gantryCoordinates = new Point3D[2];
