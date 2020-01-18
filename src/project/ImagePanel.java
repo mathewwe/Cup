@@ -1,5 +1,6 @@
 package project;
 
+import java.util.ArrayList;
 import java.awt.Graphics;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -33,6 +34,7 @@ public class ImagePanel extends JPanel{
 	double startTime;
 	double iterations;
 	Rect2d trackingRect;
+	MotionTracker MT = new MotionTracker();
 	
 	public ImagePanel(int index, CameraManager cm, int source, String name, String tracker) {
 		CM = cm;
@@ -45,7 +47,7 @@ public class ImagePanel extends JPanel{
 		pipeline = new Pipeline();
 		drawRect = false;
 		trackerInit = false;
-		startTime = (System.currentTimeMillis()/1000);
+		startTime = (System.currentTimeMillis()/(double)1000);
 		iterations = 0;
 		myMouseListener listener = new myMouseListener(); 
         addMouseListener(listener);
@@ -92,9 +94,16 @@ class myMouseListener extends MouseAdapter{
     public void paintComponent(Graphics g) {
     	
     	super.paintComponent(g);
-    	CM.update();
+    	//CM.update();
     	Mat image = CM.Cameras.get(INDEX).getCapturedMat();
-    	
+    	if(CM.Cameras.get(INDEX).TrackingMode == "AUTO") {
+    		try {
+    		Imgproc.rectangle (image,CM.Cameras.get(INDEX).AutoTrackingRect.tl(),CM.Cameras.get(INDEX).AutoTrackingRect.br(),new Scalar(255, 0, 200),5);
+    		}catch(Exception e) {
+    			
+    		}
+    	}else {
+    		
     	if(drawRect) {
         	if(trackerInit) {
         		
@@ -104,8 +113,15 @@ class myMouseListener extends MouseAdapter{
         			//System.out.println(CM.calculatePositionUsingCameras());
         		}
         	}
+        	//iterations++;
+        	//double fps = iterations/((System.currentTimeMillis()/(double)1000)-startTime);
         	Imgproc.rectangle (image,CM.TrackingRects.get(INDEX).tl(),CM.TrackingRects.get(INDEX).br(),new Scalar(0, 0, 255),5);
-        }
+        	//Imgproc.rectangle (image,rect.tl(),rect.br(),new Scalar(0, 0, 255),5);
+        	//Imgproc.putText(image, "FPS: "+fps, new Point(200,200),1, 4.0, new Scalar(255,0,0));
+        	
+    	}
+    	}
+    	
     	
     	if(CM.Cameras.get(INDEX).getCapturedMat().width() > 0) {
     		g.drawImage(CM.Cameras.get(INDEX).getImage(image), 0, 0, this);

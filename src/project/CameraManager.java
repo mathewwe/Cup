@@ -4,7 +4,10 @@ import java.util.ArrayList;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Rect2d;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.tracking.*;
 
 
@@ -14,6 +17,11 @@ public class CameraManager {
 	ArrayList<Camera> Cameras = new ArrayList();
 	ArrayList<Tracker> Trackers = new ArrayList();
 	ArrayList<Rect2d> TrackingRects = new ArrayList();
+	ArrayList<MotionTracker> MotionTrackers = new ArrayList();
+	
+	
+	Point center = new Point();
+	
 	int currentCamera = 0;
 	
 	public CameraManager() {
@@ -30,6 +38,7 @@ public class CameraManager {
 		Rect2d tr = new Rect2d();
 		TrackingRects.add(index, tr);
 		addTracker(index, Cameras.get(index).getTracker());
+		addMotionTracker(index);
 	}public void addTracker(int cameraNumber, String tracker) {
 		if(tracker == "TrackerBoosting") {
 			Tracker t = TrackerBoosting.create();
@@ -63,31 +72,87 @@ public class CameraManager {
 	}
 	public void setTrackingRect(int cameraNumber, Rect2d tr) {
 		TrackingRects.set(cameraNumber, tr);
-	}
+	}public void addMotionTracker(int cameraNumber) {
+		MotionTracker MT = new MotionTracker();
+		MotionTrackers.add(cameraNumber, MT);
+		}
 	public void initializeCamera(int cameraNumber) {
 		Cameras.get(cameraNumber).read();
    	 	Mat image = Cameras.get(cameraNumber).getCapturedMat();
    	 	setTracker(cameraNumber, Cameras.get(cameraNumber).getTracker());
    	 	Trackers.get(cameraNumber).init(image, TrackingRects.get(cameraNumber));
    	 	Cameras.get(cameraNumber).setTrackingStatus(true);
-	}public void update() {
-		for(int cameraNumber=0;cameraNumber<Cameras.size();cameraNumber++) {
+	}public void update(int cameraNumber) {
+		//for(int cameraNumber=0;cameraNumber<Cameras.size();cameraNumber++) {
 		Cameras.get(cameraNumber).read();
+		Mat image = Cameras.get(cameraNumber).getCapturedMat();
+		if(Cameras.get(cameraNumber).TrackingMode == "AUTO") {
+    	try {
+    	MotionTrackers.get(cameraNumber).process(image);
+    	Mat img = MotionTrackers.get(cameraNumber).desaturateOutput();
+    	int rows = img.rows(); //Calculates number of rows
+    	int cols = img.cols(); //Calculates number of columns
+    	int ch = img.channels(); //Calculates number of channels (Grayscale: 1, RGB: 3, etc.)
+    	double xMoment = 0;
+    	double xDistance = 0;
+    	double yMoment = 0;
+    	double yDistance = 0;
+    	double Mass = 0;
+    	
+    	for (int i=0; i<rows; i++)
+    	{
+    	    for (int j=0; j<cols; j++)
+    	    {
+    	        double[] data = img.get(i, j); //Stores element in an array
+    	        if (data[0] > 50) {
+    	        xMoment += data[0]*j;
+    	        yMoment += data[0]*i;
+    	        Mass += data[0];
+    	        }
+    	    }
+    	}
+    	if(Mass > 0) {
+    	Cameras.get(cameraNumber).setTrackingStatus(true);
+    	xDistance = xMoment/Mass;
+    	yDistance = yMoment/Mass;
+    	//System.out.println(Mass);
+    	Rect autoTrackingRect = new Rect(new Point(xDistance-20,yDistance-20), new Point(xDistance+20,yDistance+20));
+    	
+    	Cameras.get(cameraNumber).setAutoTrackingRect(autoTrackingRect);
+    	this.center.x = (Cameras.get(cameraNumber).AutoTrackingRect.tl().x + Cameras.get(cameraNumber).AutoTrackingRect.br().x)/2;
+		this.center.y = (Cameras.get(cameraNumber).AutoTrackingRect.tl().y + Cameras.get(cameraNumber).AutoTrackingRect.br().y)/2;
+		Cameras.get(cameraNumber).setFP(this.center);
+    	}else {
+    		Rect autoTrackingRect = new Rect();
+    		Cameras.get(cameraNumber).setTrackingStatus(false);
+    		Cameras.get(cameraNumber).setAutoTrackingRect(autoTrackingRect);
+    	}
+    	}catch(Exception e) {
+    		Cameras.get(cameraNumber).setTrackingStatus(false);
+    	}
+    	
+		
+	}else {
 		if(Cameras.get(cameraNumber).getTrackingStatus() == true) {
-			Mat image = Cameras.get(cameraNumber).getCapturedMat();
+			
+			
 	   		boolean updateCheck = Trackers.get(cameraNumber).update(image, TrackingRects.get(cameraNumber));
     		if(!updateCheck) {
     			Cameras.get(cameraNumber).setTrackingStatus(false);
     			//Cameras.get(cameraNumber).FP = null;
     			System.out.println("PROBLEM WITH CAMERA #"+cameraNumber);
     		}else {
-    			Point center = new Point();
+    			
     			center.x = (TrackingRects.get(cameraNumber).tl().x + TrackingRects.get(cameraNumber).br().x)/2;
     			center.y = (TrackingRects.get(cameraNumber).tl().y + TrackingRects.get(cameraNumber).br().y)/2;
     			Cameras.get(cameraNumber).setFP(center);
+    			//System.out.println(Cameras.get(cameraNumber).getFP());
     		}
+			
 		}
-		}
+	}
+		
+	//}
 		
 	}public Point3D calculatePositionUsingCameras() {
 		ArrayList<Point3D> points = new ArrayList();
@@ -99,6 +164,7 @@ public class CameraManager {
 				}
 			}
 		}
+		
 		Point3D sumPoint = new Point3D(0,0,0);
 		for (int z=0;z<points.size();z++) {
 			sumPoint = sumPoint.add(points.get(z));
@@ -106,8 +172,8 @@ public class CameraManager {
 		
 		if(points.size() > 0) {
 			//System.out.println(points.size());
-			//return points.get(0);
-			return sumPoint.multiply(1/(double)points.size());
+			return points.get(0);
+			//return sumPoint.multiply(1/(double)points.size());
 		
 		}else {
 			//System.out.println(points.size());

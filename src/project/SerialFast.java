@@ -12,21 +12,32 @@ public class SerialFast
 	SerialPort port;
 	double ticksPerRevolution = 1024;
 	double pulleyDiameter = 2.44;
+	double inchesPerTick = Math.PI*pulleyDiameter/ticksPerRevolution;
+	double ticksPerInch = 1/inchesPerTick;
+	double distanceFromOrigin;
+	double angle;
+	double newAngle;
+	int leftMotorTicks;
+	int rightMotorTicks;
+	int diamondSum;
+    String data;
+    double lMotor;
+    double rMotor;
+    char[] dataArray;
+	
 	
 	public void sendToGantryCoordinate(double x, double y) {
-		double inchesPerTick = Math.PI*pulleyDiameter/ticksPerRevolution;
-		double ticksPerInch = 1/inchesPerTick;
-		double distanceFromOrigin = Math.pow(Math.pow(x, 2)+Math.pow(y, 2), 0.5);
-		double angle = Math.atan2(y,x);
-		double newAngle = angle + Math.PI/4;
-		int leftMotorTicks = (int)(Math.sin(newAngle)*distanceFromOrigin*ticksPerInch*Math.sqrt(2));
-		int rightMotorTicks = (int)(Math.cos(newAngle)*distanceFromOrigin*ticksPerInch*Math.sqrt(2));
+		
+		distanceFromOrigin = Math.pow(Math.pow(x, 2)+Math.pow(y, 2), 0.5);
+		angle = Math.atan2(y,x);
+		newAngle = angle + Math.PI/4;
+		leftMotorTicks = (int)(Math.sin(newAngle)*distanceFromOrigin*ticksPerInch*Math.sqrt(2));
+		rightMotorTicks = (int)(Math.cos(newAngle)*distanceFromOrigin*ticksPerInch*Math.sqrt(2));
 		sendToTickCoordinate(leftMotorTicks, rightMotorTicks);
 	}
 	
 	 public void sendToTickCoordinate(int leftMotor, int rightMotor) {
-		    int diamondSum = Math.abs(leftMotor - 7580) + Math.abs(rightMotor - 0);
-		    String data;
+		    diamondSum = Math.abs(leftMotor - 7580) + Math.abs(rightMotor - 0);
 		    if(diamondSum <= 7580) {
 		    	data = Integer.toString(leftMotor) + ';' + Integer.toString(rightMotor) + '&';
 		    }else {
@@ -35,11 +46,11 @@ public class SerialFast
 		    	data = Integer.toString((int)lMotor) + ';' + Integer.toString((int)rMotor) + '&';
 		    	//data = Integer.toString(7580) + ';' + Integer.toString(0) + '&';
 		    }
-		    char[] dataArray = data.toCharArray();
+		    dataArray = data.toCharArray();
 		    for(char c:dataArray) {
 		    	try {
 		    	port.writeByte((byte)c);
-		    	System.out.println(c);
+		    	//System.out.println(c);
 		    	Thread.sleep(1);
 		    	}catch(Exception e) {
 		    		e.printStackTrace();

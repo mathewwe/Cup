@@ -4,12 +4,14 @@ import java.awt.Image;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.videoio.Videoio;
 
 import javafx.geometry.Point3D;
 
 public class Camera {
 	String TRACKER;
+	String TrackingMode = "AUTO";
 	boolean TrackingSTATUS = false;
 	String NAME;
 	VideoCap VC;
@@ -23,6 +25,7 @@ public class Camera {
 	Point3D BL = new Point3D(0,0,0);
 	Point3D BR = new Point3D(0,0,0);
 	Point3D FP = new Point3D(0,0,0);
+	Rect AutoTrackingRect;
 	
 	public void setCC(double cc) {
 		 CC = cc;
@@ -33,7 +36,10 @@ public class Camera {
 		 VC.cap.set(Videoio.CAP_PROP_EXPOSURE, exposure);
 	}public double getExposure() {
 		return Exposure;
-	}public void setTracker(String tracker) {
+	}public void setAutoTrackingRect(Rect atr) {
+		AutoTrackingRect = atr;
+	}
+	public void setTracker(String tracker) {
 		TRACKER = tracker;
 	}public String getTracker() {
 		return TRACKER;
@@ -114,8 +120,8 @@ public class Camera {
 		//double verticalProportion = circularFisheyeCorrection(p.y,VC.getCapturedMat().height());
 		//double horizontalProportion = cubicFisheyeCorrection(p.x,VC.getCapturedMat().width(), CC);
 		//double verticalProportion = cubicFisheyeCorrection(p.y,VC.getCapturedMat().height(), CC);
-		double horizontalProportion = otherFisheyeCorrection(p.x,p.y,VC.getCapturedMat().width(), VC.getCapturedMat().height(), CC)[0];
-		double verticalProportion = otherFisheyeCorrection(p.x,p.y,VC.getCapturedMat().width(), VC.getCapturedMat().height(), CC)[1];
+		double horizontalProportion = p.x/VC.getCapturedMat().width(); //otherFisheyeCorrection(p.x,p.y,VC.getCapturedMat().width(), VC.getCapturedMat().height(), CC)[0];
+		double verticalProportion = p.y/VC.getCapturedMat().height(); //otherFisheyeCorrection(p.x,p.y,VC.getCapturedMat().width(), VC.getCapturedMat().height(), CC)[1];
 		
 		Point3D topPoint = new Point3D(horizontalProportion*(TR.getX()-TL.getX())+TL.getX(),
 				horizontalProportion*(TR.getY()-TL.getY())+TL.getY(),
