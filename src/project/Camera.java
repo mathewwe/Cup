@@ -11,7 +11,7 @@ import javafx.geometry.Point3D;
 
 public class Camera {
 	String TRACKER;
-	String TrackingMode = "AUTO";
+	String TrackingMode = "MOTION DETECTION";
 	boolean TrackingSTATUS = false;
 	String NAME;
 	VideoCap VC;

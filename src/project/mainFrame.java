@@ -15,6 +15,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -67,7 +68,7 @@ public class mainFrame extends JFrame{
 	BLX, BLY, BLZ,
 	BRX, BRY, BRZ;
 	JRadioButton cameraButton0, cameraButton1, cameraButton2, cameraButton3;
-	JRadioButton modeButton0, modeButton1;
+	JRadioButton modeButton0, modeButton1, modeButton2;
 	JLabel Point, X, Y, Z, Location, TL, TR, BL, BR;
 	JLabel blank0;
 	JLabel CC;
@@ -114,7 +115,7 @@ public class mainFrame extends JFrame{
 	          }
 	     });
 		sf = new SerialFast();
-		sf.startPort("COM3");
+		//sf.startPort("COM3");
 		times = new double[2];
 		times[1] = System.currentTimeMillis()/1000;
 		gantryCoordinates = new Point3D[2];
@@ -165,10 +166,12 @@ public class mainFrame extends JFrame{
 	    cameraButton2.setActionCommand("2");
 	    cameraButton3 = new JRadioButton("Camera3");
 	    cameraButton3.setActionCommand("3");
-	    modeButton0 = new JRadioButton("AUTO");
+	    modeButton0 = new JRadioButton("MOTION DETECTION");
 	    modeButton0.setActionCommand("0");
-	    modeButton1 = new JRadioButton("MANUAL");
+	    modeButton1 = new JRadioButton("MANUAL TRACKING");
 	    modeButton1.setActionCommand("1");
+	    modeButton2 = new JRadioButton("MOTION TRACKING");
+	    modeButton2.setActionCommand("2");
 	    group = new ButtonGroup();
 	    cameraMode = new ButtonGroup();
 	    
@@ -178,6 +181,7 @@ public class mainFrame extends JFrame{
 		myFrame.create();
 	}public void create() {
 		modePanel = new JPanel();
+		modePanel.setLayout(new GridLayout(2,2));
 		fileBox.setLayout(new GridLayout(2,2));
 		holdingBox.setLayout(new BoxLayout(holdingBox, BoxLayout.Y_AXIS));
 		bufferBox.setPreferredSize(new Dimension(400, 300));
@@ -209,6 +213,7 @@ public class mainFrame extends JFrame{
 	    group.add(cameraButton3);
 	    cameraMode.add(modeButton0);
 	    cameraMode.add(modeButton1);
+	    cameraMode.add(modeButton2);
 	    
 	    ActionListener alisten = new CameraActionListener();
 	    ActionListener clearListener = new ClearActionListener();
@@ -219,6 +224,7 @@ public class mainFrame extends JFrame{
 	    cameraButton3.addActionListener(alisten);
 	    modeButton0.addActionListener(trackingModeListener);
 	    modeButton1.addActionListener(trackingModeListener);
+	    modeButton2.addActionListener(trackingModeListener);
 	    clear.addActionListener(clearListener);
 	    
 	    JPanel c = new JPanel();
@@ -230,6 +236,7 @@ public class mainFrame extends JFrame{
 	    modePanel.add(trackingMode);
 		modePanel.add(modeButton0);
 		modePanel.add(modeButton1);
+		modePanel.add(modeButton2);
 	   
 	    ActionListener submitListen = new SubmitActionListener();
 	    Submit.addActionListener(submitListen);
@@ -242,12 +249,12 @@ public class mainFrame extends JFrame{
 		this.setSize(new Dimension(1000, 600));
 		
 		containerBox.setLayout(new BoxLayout(containerBox, BoxLayout.X_AXIS));	
-		Panel0 = new ImagePanel(0, cm, 0, "camera0", "TrackerKCF");
-		Panel1 = new ImagePanel(1, cm, 1, "camera1", "TrackerKCF");
+		Panel0 = new ImagePanel(0, cm, 0, "camera0", "TrackerMOSSE");
+		Panel1 = new ImagePanel(1, cm, 1, "camera1", "TrackerMOSSE");
 		Panel1.setVisible(false);
-		Panel2 = new ImagePanel(2, cm, 2, "camera2", "TrackerKCF");
+		Panel2 = new ImagePanel(2, cm, 2, "camera2", "TrackerMOSSE");
 		Panel2.setVisible(false);
-		Panel3 = new ImagePanel(3, cm, 3, "camera2", "TrackerKCF");
+		Panel3 = new ImagePanel(3, cm, 3, "camera2", "TrackerMOSSE");
 		Panel3.setVisible(false);
 		Panel0.setPreferredSize(new Dimension(800, 600));
 		Panel1.setPreferredSize(new Dimension(800, 600));
@@ -343,7 +350,7 @@ public class mainFrame extends JFrame{
 					sf.sendToGantryCoordinate(50, 30);
 				}else {*/
 				//sf.sendToGantryCoordinate(impactX, impactY);
-				sf.sendToGantryCoordinate(gantryPoint.getX(), gantryPoint.getY());
+				//sf.sendToGantryCoordinate(gantryPoint.getX(), gantryPoint.getY());
 				//}
 				
 				times[1] = times[0];
@@ -365,9 +372,9 @@ public class mainFrame extends JFrame{
 	        	Panel1.setVisible(false);
 	        	Panel2.setVisible(false);
 	        	Panel3.setVisible(false);
-	        	if(cm.Cameras.get(cm.currentCamera).TrackingMode == "AUTO") {
+	        	if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MOTION DETECTION") {
 		        	modeButton0.doClick();
-	        	}else if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MANUAL") {
+	        	}else if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MANUAL TRACKING") {
 	        	modeButton1.doClick();
 	        	}
 	        } else if(group.getSelection().getActionCommand() == "1") {
@@ -377,9 +384,9 @@ public class mainFrame extends JFrame{
 	        	Panel1.setVisible(true);
 	        	Panel2.setVisible(false);
 	        	Panel3.setVisible(false);
-	        	if(cm.Cameras.get(cm.currentCamera).TrackingMode == "AUTO") {
+	        	if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MOTION DETECTION") {
 		        	modeButton0.doClick();
-	        	}else if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MANUAL") {
+	        	}else if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MANUAL TRACKING") {
 	        	modeButton1.doClick();
 	        	}
 	        } else if(group.getSelection().getActionCommand() == "2") {
@@ -389,9 +396,9 @@ public class mainFrame extends JFrame{
 	        	Panel1.setVisible(false);
 	        	Panel2.setVisible(true);
 	        	Panel3.setVisible(false);
-	        	if(cm.Cameras.get(cm.currentCamera).TrackingMode == "AUTO") {
+	        	if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MOTION DETECTION") {
 		        	modeButton0.doClick();
-	        	}else if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MANUAL") {
+	        	}else if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MANUAL TRACKING") {
 	        	modeButton1.doClick();
 	        	}
 	        }else if(group.getSelection().getActionCommand() == "3") {
@@ -401,9 +408,9 @@ public class mainFrame extends JFrame{
 	        	Panel1.setVisible(false);
 	        	Panel2.setVisible(false);
 	        	Panel3.setVisible(true);
-	        	if(cm.Cameras.get(cm.currentCamera).TrackingMode == "AUTO") {
+	        	if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MOTION DETECTION") {
 		        	modeButton0.doClick();
-	        	}else if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MANUAL") {
+	        	}else if(cm.Cameras.get(cm.currentCamera).TrackingMode == "MANUAL TRACKING") {
 	        	modeButton1.doClick();
 	        	}
 	        }
@@ -601,15 +608,20 @@ public class mainFrame extends JFrame{
 		      public void actionPerformed(ActionEvent ev) {
 		     //   System.out.println(group.getSelection().getActionCommand());
 		        if(cameraMode.getSelection().getActionCommand() == "0") {
-		        	if(cm.Cameras.get(cm.currentCamera).TrackingMode != "AUTO") {
+		        	if(cm.Cameras.get(cm.currentCamera).TrackingMode != "MOTION DETECTION") {
 		        	cm.Cameras.get(cm.currentCamera).setTrackingStatus(false);
 		        	}
-		        	cm.Cameras.get(cm.currentCamera).TrackingMode = "AUTO";
+		        	cm.Cameras.get(cm.currentCamera).TrackingMode = "MOTION DETECTION";
 		        } else if(cameraMode.getSelection().getActionCommand() == "1") {
-		        	if(cm.Cameras.get(cm.currentCamera).TrackingMode != "MANUAL") {
+		        	if(cm.Cameras.get(cm.currentCamera).TrackingMode != "MANUAL TRACKING") {
 			        	cm.Cameras.get(cm.currentCamera).setTrackingStatus(false);
 			        	}
-		        	cm.Cameras.get(cm.currentCamera).TrackingMode = "MANUAL";
+		        	cm.Cameras.get(cm.currentCamera).TrackingMode = "MOTION TRACKING";
+		        } else if(cameraMode.getSelection().getActionCommand() == "2") {
+		        	if(cm.Cameras.get(cm.currentCamera).TrackingMode != "MOTION TRACKING") {
+			        	cm.Cameras.get(cm.currentCamera).setTrackingStatus(false);
+			        	}
+		        	cm.Cameras.get(cm.currentCamera).TrackingMode = "MOTION TRACKING";
 		        } 
 		        
 		    }
